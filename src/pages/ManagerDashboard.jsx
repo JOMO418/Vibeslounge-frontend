@@ -11,7 +11,7 @@ import { ShoppingCart, LogOut, Loader2, Plus, DollarSign, X, Minus } from 'lucid
 
 const formatKES = (amount) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(amount || 0);
 const formatTime = (date) => new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-const formatDate = (date) => new Date(date).toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' });
+
 
 const ManagerDashboard = () => {
   const { user, logout } = useAuth();
@@ -39,7 +39,9 @@ const ManagerDashboard = () => {
     setupSocketListeners();
     const interval = setInterval(fetchData, 60000);
     return () => { clearInterval(interval); socketService.removeAllListeners(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
 
   const fetchData = async () => {
     try {
