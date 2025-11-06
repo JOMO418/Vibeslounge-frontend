@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-// Named imports for services (fixes default export errors)
 import socketService from '../services/socketService';
 import { salesService } from '../services/salesService';
 import { productService } from '../services/productService';
 import { tabService } from '../services/tabService';
 import { ShoppingCart, LogOut, Loader2, Plus, DollarSign, X, Minus } from 'lucide-react';
+import ProfitCard from '../components/ProfitCard';
 
 const formatKES = (amount) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(amount || 0);
 const formatTime = (date) => new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
 
 const ManagerDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [todaysProfit, setTodaysProfit] = useState(0);
+  const [todaysRevenue, setTodaysRevenue] = useState(0);
+  const [todaysTransactions, setTodaysTransactions] = useState(0);
   const [mySales, setMySales] = useState([]);
+  const [salesStats, setSalesStats] = useState(null);
   const [products, setProducts] = useState([]);
   const [tabs, setTabs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,21 +29,23 @@ const ManagerDashboard = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState(null);
   const [cart, setCart] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [newTab, setNewTab] = useState({ customerName: '', customerPhone: '', productName: '', quantity: 1, amountOwed: '', notes: '' });
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentAmounts, setPaymentAmounts] = useState({ cash: '', mpesa: '' });
 
   useEffect(() => {
     fetchData();
     setupSocketListeners();
     const interval = setInterval(fetchData, 60000);
-    return () => { clearInterval(interval); socketService.removeAllListeners(); };
+    return () => { 
+      clearInterval(interval); 
+      socketService.removeAllListeners(); 
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
 
   const fetchData = async () => {
     try {
@@ -51,13 +55,33 @@ const ManagerDashboard = () => {
         productService.getAll(),
         tabService.getAll()
       ]);
-      setTodaysProfit(profitRes.data?.todayProfit || 0);
-      setMySales(salesRes.data?.sales || []);
-      setProducts(productsRes.data?.products || []);
-      setTabs(tabsRes.data?.tabs || []);
+
+      // Handle profit response
+      if (profitRes.data) {
+        setTodaysProfit(profitRes.data.todayProfit || 0);
+        setTodaysRevenue(profitRes.data.todayRevenue || 0);
+        setTodaysTransactions(profitRes.data.todayTransactions || 0);
+      }
+
+      // Handle sales response
+      if (salesRes.data) {
+        setMySales(salesRes.data.sales || []);
+        setSalesStats(salesRes.data.stats || null);
+      }
+
+      // Handle products response
+      setProducts(productsRes.data?.products || productsRes.data || []);
+
+      // Handle tabs response
+      setTabs(tabsRes.data?.tabs || tabsRes.data || []);
+
     } catch (error) {
       console.error('Failed to fetch data:', error);
-      toast.error('Failed to load dashboard data');
+      if (error.response?.status === 404) {
+        toast.error('Backend routes not found. Check your server configuration.');
+      } else {
+        toast.error('Failed to load dashboard data');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,14 +89,32 @@ const ManagerDashboard = () => {
 
   const setupSocketListeners = () => {
     socketService.connect();
-    socketService.onSaleCreated(() => { fetchData(); toast.success('New sale recorded!'); });
-    socketService.onProfitUpdated((data) => setTodaysProfit(data.todayProfit));
+    
+    socketService.onSaleCreated(() => { 
+      fetchData(); 
+      toast.success('New sale recorded!'); 
+    });
+    
+    socketService.onProfitUpdated((data) => {
+      if (data.todayProfit !== undefined) {
+        setTodaysProfit(data.todayProfit);
+      }
+      if (data.todayRevenue !== undefined) {
+        setTodaysRevenue(data.todayRevenue);
+      }
+    });
+    
     socketService.onStockUpdated(() => fetchData());
     socketService.onTabCreated(() => fetchData());
     socketService.onTabUpdated(() => fetchData());
   };
 
-  const handleLogout = () => { logout(); navigate('/login'); toast.success('Logged out successfully'); };
+  const handleLogout = () => { 
+    socketService.disconnect();
+    logout(); 
+    navigate('/login'); 
+    toast.success('Logged out successfully'); 
+  };
 
   const addToCart = (product, quantity = 1) => {
     const existingItem = cart.find(item => item._id === product._id);
@@ -86,24 +128,57 @@ const ManagerDashboard = () => {
 
   const updateCartQuantity = (productId, newQuantity) => {
     const product = products.find(p => p._id === productId);
-    if (newQuantity > product.quantity) { toast.error(`Only ${product.quantity} units available`); return; }
-    if (newQuantity <= 0) { removeFromCart(productId); return; }
+    if (newQuantity > product.quantity) { 
+      toast.error(`Only ${product.quantity} units available`); 
+      return; 
+    }
+    if (newQuantity <= 0) { 
+      removeFromCart(productId); 
+      return; 
+    }
     setCart(cart.map(item => item._id === productId ? { ...item, cartQuantity: newQuantity } : item));
   };
 
   const removeFromCart = (productId) => setCart(cart.filter(item => item._id !== productId));
-  const clearCart = () => { setCart([]); setPaymentMethod(''); };
+  
+  const clearCart = () => { 
+    setCart([]); 
+    setPaymentAmounts({ cash: '', mpesa: '' }); 
+  };
+  
   const calculateTotal = () => cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
 
   const handleCompleteSale = async () => {
-    if (cart.length === 0) { toast.error('Cart is empty'); return; }
-    if (!paymentMethod) { toast.error('Please select payment method'); return; }
+    if (cart.length === 0) { 
+      toast.error('Cart is empty'); 
+      return; 
+    }
+    
+    const cashAmt = parseFloat(paymentAmounts.cash) || 0;
+    const mpesaAmt = parseFloat(paymentAmounts.mpesa) || 0;
+    const total = calculateTotal();
+    
+    if (Math.abs((cashAmt + mpesaAmt) - total) > 0.01) {
+      toast.error(`Payment mismatch! Total: ${formatKES(total)}, Paid: ${formatKES(cashAmt + mpesaAmt)}`);
+      return;
+    }
+    
+    if (cashAmt === 0 && mpesaAmt === 0) {
+      toast.error('Please enter payment amounts');
+      return;
+    }
+    
     setLoading(true);
     const loadingToast = toast.loading('Processing sale...');
     try {
-      await salesService.createSale({ items: cart.map(item => ({ productId: item._id, quantity: item.cartQuantity })), paymentMethod });
-      toast.success(`Sale completed! ${formatKES(calculateTotal())}`, { id: loadingToast });
-      setSaleModalOpen(false); clearCart(); fetchData();
+      await salesService.createSale({ 
+        items: cart.map(item => ({ productId: item._id, quantity: item.cartQuantity })), 
+        paymentMethods: { cash: cashAmt, mpesa: mpesaAmt }
+      });
+      toast.success(`Sale completed! ${formatKES(total)}`, { id: loadingToast });
+      setSaleModalOpen(false); 
+      clearCart(); 
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to complete sale', { id: loadingToast });
     } finally {
@@ -131,7 +206,10 @@ const ManagerDashboard = () => {
     try {
       await tabService.recordPayment(selectedTab._id, { amountPaid: parseFloat(paymentAmount) });
       toast.success('Payment recorded successfully!', { id: loadingToast });
-      setShowPaymentModal(false); setSelectedTab(null); setPaymentAmount(''); fetchData();
+      setShowPaymentModal(false); 
+      setSelectedTab(null); 
+      setPaymentAmount(''); 
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to record payment', { id: loadingToast });
     }
@@ -176,10 +254,7 @@ const ManagerDashboard = () => {
             <p className="text-xs sm:text-sm text-gray-400">{user?.email}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg border border-[#D4AF37]/30">
-              <p className="text-xs text-gray-400 uppercase">Today's Profit</p>
-              <p className="text-2xl sm:text-3xl font-bold text-[#D4AF37]">{formatKES(todaysProfit)}</p>
-            </div>
+            <ProfitCard todaysProfit={todaysProfit} />
             <button onClick={handleLogout} className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 transition text-sm">
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -246,20 +321,39 @@ const ManagerDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {mySales.map((sale, idx) => (
-                    <tr key={sale._id} className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-gray-900/50'}>
-                      <td className="py-3 px-4 text-xs sm:text-sm text-gray-400">{formatTime(sale.createdAt)}</td>
-                      <td className="py-3 px-4 text-xs sm:text-sm font-semibold">{sale.productName}</td>
-                      <td className="py-3 px-4 text-xs sm:text-sm text-center">{sale.quantitySold}</td>
-                      <td className="py-3 px-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${sale.paymentMethod === 'cash' ? 'bg-green-500/20 text-green-400' : 'bg-green-600/20 text-green-500'}`}>
-                          {sale.paymentMethod === 'cash' ? 'CASH' : 'M-PESA'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-xs sm:text-sm text-right font-semibold">{formatKES(sale.totalPrice)}</td>
-                      <td className="py-3 px-4 text-xs sm:text-sm text-right font-bold text-green-400">{formatKES(sale.profit)}</td>
-                    </tr>
-                  ))}
+                  {mySales.map((sale, idx) => {
+                    // Determine payment method display
+                    const cashAmt = sale.paymentMethods?.cash || 0;
+                    const mpesaAmt = sale.paymentMethods?.mpesa || 0;
+                    let paymentDisplay = 'UNKNOWN';
+                    let paymentClass = 'bg-gray-500/20 text-gray-400';
+                    
+                    if (cashAmt > 0 && mpesaAmt > 0) {
+                      paymentDisplay = 'SPLIT';
+                      paymentClass = 'bg-blue-500/20 text-blue-400';
+                    } else if (cashAmt > 0) {
+                      paymentDisplay = 'CASH';
+                      paymentClass = 'bg-green-500/20 text-green-400';
+                    } else if (mpesaAmt > 0) {
+                      paymentDisplay = 'M-PESA';
+                      paymentClass = 'bg-green-600/20 text-green-500';
+                    }
+                    
+                    return (
+                      <tr key={sale._id} className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-gray-900/50'}>
+                        <td className="py-3 px-4 text-xs sm:text-sm text-gray-400">{formatTime(sale.createdAt)}</td>
+                        <td className="py-3 px-4 text-xs sm:text-sm font-semibold">{sale.productName}</td>
+                        <td className="py-3 px-4 text-xs sm:text-sm text-center">{sale.quantitySold}</td>
+                        <td className="py-3 px-4">
+                          <span className={`text-xs px-2 py-1 rounded-full ${paymentClass}`}>
+                            {paymentDisplay}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-xs sm:text-sm text-right font-semibold">{formatKES(sale.totalPrice)}</td>
+                        <td className="py-3 px-4 text-xs sm:text-sm text-right font-bold text-green-400">{formatKES(sale.profit)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot className="bg-gray-900 border-t-2 border-gray-700">
                   <tr>
@@ -371,7 +465,7 @@ const ManagerDashboard = () => {
                   <h3 className="text-base sm:text-lg font-semibold mb-4">Select Products</h3>
                   <div className="mb-4 space-y-2">
                     <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" />
-                    <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]">
+                    <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="w-full px-4 py-2 bg-gray-900 border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]">
                       <option value="all">All Categories</option>
                       {categories.map(cat => (<option key={cat} value={cat} className="capitalize">{cat}</option>))}
                     </select>
@@ -419,19 +513,51 @@ const ManagerDashboard = () => {
                   {cart.length > 0 && (
                     <>
                       <div className="mb-4">
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Payment Method *</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button onClick={() => setPaymentMethod('cash')} className={`py-3 rounded-lg font-semibold transition text-sm ${paymentMethod === 'cash' ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>💵 CASH</button>
-                          <button onClick={() => setPaymentMethod('mpesa')} className={`py-3 rounded-lg font-semibold transition text-sm ${paymentMethod === 'mpesa' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>📱 M-PESA</button>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Payment Details *</label>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">💵 Cash Amount</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={paymentAmounts.cash}
+                              onChange={(e) => setPaymentAmounts({...paymentAmounts, cash: e.target.value})}
+                              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">📱 M-PESA Amount</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={paymentAmounts.mpesa}
+                              onChange={(e) => setPaymentAmounts({...paymentAmounts, mpesa: e.target.value})}
+                              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div className="bg-gray-800 p-2 rounded text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Cart Total:</span>
+                              <span className="text-[#D4AF37] font-bold">{formatKES(calculateTotal())}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Paying:</span>
+                              <span className={`font-bold ${Math.abs(((parseFloat(paymentAmounts.cash) || 0) + (parseFloat(paymentAmounts.mpesa) || 0)) - calculateTotal()) < 0.01 ? 'text-green-400' : 'text-red-400'}`}>
+                                {formatKES((parseFloat(paymentAmounts.cash) || 0) + (parseFloat(paymentAmounts.mpesa) || 0))}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="border-t border-gray-700 pt-4 mb-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-lg">Total:</span>
-                          <span className="text-[#D4AF37] text-2xl sm:text-3xl font-bold">{formatKES(calculateTotal())}</span>
-                        </div>
-                      </div>
-                      <button onClick={handleCompleteSale} disabled={loading || !paymentMethod} className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2">
+                      <button 
+                        onClick={handleCompleteSale} 
+                        disabled={loading || ((parseFloat(paymentAmounts.cash) || 0) === 0 && (parseFloat(paymentAmounts.mpesa) || 0) === 0)} 
+                        className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2"
+                      >
                         {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</> : '✓ Complete Sale'}
                       </button>
                     </>

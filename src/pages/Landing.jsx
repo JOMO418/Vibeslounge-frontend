@@ -50,7 +50,7 @@ const Landing = () => {
             </svg>
             <div className="leading-tight">
               <h1 className="text-3xl font-serif italic font-bold bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent">
-                Vibes
+                Vybz
               </h1>
               <p className="text-sm font-sans font-light text-gray-300 tracking-widest -mt-1">LOUNGE</p>
             </div>
@@ -233,7 +233,7 @@ const Landing = () => {
                   </defs>
                 </svg>
                 <div>
-                  <p className="text-2xl font-serif italic font-bold text-yellow-400">Vibes</p>
+                  <p className="text-2xl font-serif italic font-bold text-yellow-400">VYBZ</p>
                   <p className="text-xs text-gray-400 tracking-widest">LOUNGE</p>
                 </div>
               </div>
@@ -254,9 +254,9 @@ const Landing = () => {
               <h4 className="text-white font-bold mb-4">Contact</h4>
               <div className="space-y-2 text-gray-400 text-sm">
                 <p>📍 Utawala, Nairobi, Kenya</p>
-                <p>📞 +254 700 000 000</p>
-                <p>✉️ info@vibeslounge.co.ke</p>
-                <p>🕐 Mon-Sun: 10AM - 11PM</p>
+                <p>📞 +254 708333761</p>
+                <p>✉️ info@vybzslounge.co.ke</p>
+                <p>🕐 Mon-Sun: 10AM - 1AM</p>
               </div>
             </div>
           </div>
