@@ -311,7 +311,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen" style={{ backgroundColor: 'hsl(0 0% 4%)' }}>
       {/* Top Bar */}
       <header
-  className="sticky top-0 z-50 px-6 py-4"
+  className="px-6 py-4"
   style={{
     backgroundColor: 'hsl(0 0% 10%)',
     borderBottom: '1px solid hsl(0 0% 17%)',
@@ -419,7 +419,8 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 17%)' }}>
-              <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
                 <thead style={{ backgroundColor: 'hsl(0 0% 10%)' }}>
                   <tr>
                     <th className="text-left py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Product Name</th>
@@ -501,8 +502,9 @@ const AdminDashboard = () => {
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
+            </table>
+          </div> {/* End overflow-x-auto */}
+        </div>
           )}
         </div>
 

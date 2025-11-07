@@ -16,7 +16,7 @@ export const salesService = {
   // Get sales analytics
   getAnalytics: (params) => api.get('/sales/analytics', { params }),
 
-deleteSale: (id) => api.delete(`/sales/${id}`),
+  deleteSale: (id) => api.delete(`/sales/${id}`),
 
   // ❌ REMOVE (not defined in backend)
   // getBestSellers: (params) => api.get('/sales/best-sellers', { params }),
