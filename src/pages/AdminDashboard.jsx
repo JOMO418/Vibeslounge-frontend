@@ -1042,7 +1042,7 @@ const AdminDashboard = () => {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 0% 15%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  // CONTINUATION FROM THE EDIT PRODUCT MODAL - MISSING PART
+                  
 
                   Cancel
                 </button>

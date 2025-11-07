@@ -247,7 +247,7 @@ const ManagerDashboard = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 bg-[#1a1a1a] border-b border-gray-800 px-4 sm:px-6 py-4">
+      <header className=" z-50 bg-[#1a1a1a] border-b border-gray-800 px-4 sm:px-6 py-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">Manager Dashboard</h1>
@@ -275,29 +275,49 @@ const ManagerDashboard = () => {
         <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-bold mb-4">Live Inventory</h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px]">
-              <thead className="bg-gray-900">
-                <tr>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Product</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Category</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Price</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Stock</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product, idx) => (
-                  <tr key={product._id} className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-gray-900/50'}>
-                    <td className="py-3 px-4 font-semibold text-xs sm:text-sm">{product.name}</td>
-                    <td className="py-3 px-4 text-xs sm:text-sm text-gray-400 capitalize">{product.category}</td>
-                    <td className="py-3 px-4 text-xs sm:text-sm font-semibold text-[#D4AF37] text-right">{formatKES(product.price)}</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className={`font-semibold text-xs sm:text-sm ${product.quantity < 5 ? 'text-red-500' : product.quantity <= 10 ? 'text-yellow-500' : 'text-green-500'}`}>
-                        {product.quantity}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+  <table className="w-full min-w-[800px]">
+            <thead className="bg-gray-900">
+  <tr>
+    <th className="text-left py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Product</th>
+    <th className="text-left py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Category</th>
+    <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Cost Price</th>
+    <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Selling Price</th>
+   
+    <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Stock</th>
+  </tr>
+</thead>
+<tbody>
+  {products.map((product, idx) => {
+    // Calculate profit per unit
+    const profitPerUnit = product.price - product.costPrice;
+    
+    return (
+      <tr key={product._id} className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-gray-900/50'}>
+        <td className="py-3 px-4 font-semibold text-xs sm:text-sm">{product.name}</td>
+        <td className="py-3 px-4 text-xs sm:text-sm text-gray-400 capitalize">{product.category}</td>
+        
+        {/* Cost Price */}
+        <td className="py-3 px-4 text-xs sm:text-sm font-semibold text-gray-300 text-right">
+          {formatKES(product.costPrice)}
+        </td>
+        
+        {/* Selling Price */}
+        <td className="py-3 px-4 text-xs sm:text-sm font-semibold text-[#D4AF37] text-right">
+          {formatKES(product.price)}
+        </td>
+        
+       
+        
+        {/* Stock */}
+        <td className="py-3 px-4 text-right">
+          <span className={`font-semibold text-xs sm:text-sm ${product.quantity < 5 ? 'text-red-500' : product.quantity <= 10 ? 'text-yellow-500' : 'text-green-500'}`}>
+            {product.quantity}
+          </span>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
             </table>
           </div>
         </div>
