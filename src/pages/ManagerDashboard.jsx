@@ -6,7 +6,7 @@ import socketService from '../services/socketService';
 import { salesService } from '../services/salesService';
 import { productService } from '../services/productService';
 import { tabService } from '../services/tabService';
-import { ShoppingCart, LogOut, Loader2, Plus, DollarSign, X, Minus } from 'lucide-react';
+import { ShoppingCart, LogOut, Loader2, Plus, DollarSign, X, Minus, Edit, Trash2 } from 'lucide-react';
 import ProfitCard from '../components/ProfitCard';
 
 const formatKES = (amount) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(amount || 0);
@@ -35,6 +35,20 @@ const ManagerDashboard = () => {
   const [newTab, setNewTab] = useState({ customerName: '', customerPhone: '', productName: '', quantity: 1, amountOwed: '', notes: '' });
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentAmounts, setPaymentAmounts] = useState({ cash: '', mpesa: '' });
+  
+  // Added missing state variables for product management
+  const [addProductModalOpen, setAddProductModalOpen] = useState(false);
+  const [editProductModalOpen, setEditProductModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    category: '',
+    price: '',
+    costPrice: '',
+    quantity: '',
+    description: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -56,23 +70,18 @@ const ManagerDashboard = () => {
         tabService.getAll()
       ]);
 
-      // Handle profit response
       if (profitRes.data) {
         setTodaysProfit(profitRes.data.todayProfit || 0);
         setTodaysRevenue(profitRes.data.todayRevenue || 0);
         setTodaysTransactions(profitRes.data.todayTransactions || 0);
       }
 
-      // Handle sales response
       if (salesRes.data) {
         setMySales(salesRes.data.sales || []);
         setSalesStats(salesRes.data.stats || null);
       }
 
-      // Handle products response
       setProducts(productsRes.data?.products || productsRes.data || []);
-
-      // Handle tabs response
       setTabs(tabsRes.data?.tabs || tabsRes.data || []);
 
     } catch (error) {
@@ -114,6 +123,67 @@ const ManagerDashboard = () => {
     logout(); 
     navigate('/login'); 
     toast.success('Logged out successfully'); 
+  };
+
+  // Added missing product management handlers
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const loadingToast = toast.loading('Adding product...');
+    try {
+      await productService.create(productForm);
+      toast.success('Product added successfully!', { id: loadingToast });
+      setAddProductModalOpen(false);
+      setProductForm({ name: '', category: '', price: '', costPrice: '', quantity: '', description: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add product', { id: loadingToast });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEditModal = (product) => {
+    setSelectedProduct(product);
+    setProductForm({
+      name: product.name,
+      category: product.category,
+      price: product.price.toString(),
+      costPrice: product.costPrice.toString(),
+      quantity: product.quantity.toString(),
+      description: product.description || ''
+    });
+    setEditProductModalOpen(true);
+  };
+
+  const handleEditProduct = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const loadingToast = toast.loading('Updating product...');
+    try {
+      await productService.update(selectedProduct._id, productForm);
+      toast.success('Product updated successfully!', { id: loadingToast });
+      setEditProductModalOpen(false);
+      setSelectedProduct(null);
+      setProductForm({ name: '', category: '', price: '', costPrice: '', quantity: '', description: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update product', { id: loadingToast });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId, productName) => {
+    if (!window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) return;
+    const loadingToast = toast.loading('Deleting product...');
+    try {
+      await productService.delete(productId);
+      toast.success('Product deleted successfully', { id: loadingToast });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete product', { id: loadingToast });
+    }
   };
 
   const addToCart = (product, quantity = 1) => {
