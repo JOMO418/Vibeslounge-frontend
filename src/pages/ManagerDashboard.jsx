@@ -271,55 +271,114 @@ const ManagerDashboard = () => {
           Make a Sale
         </button>
 
-        {/* Live Inventory */}
-        <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Live Inventory</h2>
-          <div className="overflow-x-auto">
-  <table className="w-full min-w-[800px]">
-            <thead className="bg-gray-900">
-  <tr>
-    <th className="text-left py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Product</th>
-    <th className="text-left py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Category</th>
-    <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Cost Price</th>
-    <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Selling Price</th>
-   
-    <th className="text-right py-3 px-4 font-semibold text-gray-400 text-xs sm:text-sm">Stock</th>
-  </tr>
-</thead>
-<tbody>
-  {products.map((product, idx) => {
-    // Calculate profit per unit
-    const profitPerUnit = product.price - product.costPrice;
-    
-    return (
-      <tr key={product._id} className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-gray-900/50'}>
-        <td className="py-3 px-4 font-semibold text-xs sm:text-sm">{product.name}</td>
-        <td className="py-3 px-4 text-xs sm:text-sm text-gray-400 capitalize">{product.category}</td>
-        
-        {/* Cost Price */}
-        <td className="py-3 px-4 text-xs sm:text-sm font-semibold text-gray-300 text-right">
-          {formatKES(product.costPrice)}
-        </td>
-        
-        {/* Selling Price */}
-        <td className="py-3 px-4 text-xs sm:text-sm font-semibold text-[#D4AF37] text-right">
-          {formatKES(product.price)}
-        </td>
-        
-       
-        
-        {/* Stock */}
-        <td className="py-3 px-4 text-right">
-          <span className={`font-semibold text-xs sm:text-sm ${product.quantity < 5 ? 'text-red-500' : product.quantity <= 10 ? 'text-yellow-500' : 'text-green-500'}`}>
-            {product.quantity}
-          </span>
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
-            </table>
+          {/* Inventory Table */}
+          <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold" style={{ color: 'hsl(0 0% 98%)' }}>Inventory Management</h2>
+            <button 
+              onClick={() => setAddProductModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition"
+              style={{ backgroundColor: 'hsl(45 93% 47%)', color: 'hsl(0 0% 0%)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(45 93% 42%)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(45 93% 47%)'}
+            >
+              + Add New Product
+            </button>
           </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="h-12 w-12 animate-spin" style={{ color: 'hsl(45 93% 47%)' }} />
+            </div>
+          ) : (
+            <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 17%)' }}>
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+                <thead style={{ backgroundColor: 'hsl(0 0% 10%)' }}>
+                  <tr>
+                    <th className="text-left py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Product Name</th>
+                    <th className="text-left py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Category</th>
+                    <th className="text-left py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Price</th>
+                    <th className="text-left py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Stock</th>
+                    <th className="text-left py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Status</th>
+                    <th className="text-center py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 54%)' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products?.map((product, idx) => (
+                    <tr 
+                      key={product._id} 
+                      className="transition"
+                      style={{ 
+                        backgroundColor: idx % 2 === 0 ? 'hsl(0 0% 10%)' : 'hsl(0 0% 10% / 0.5)',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 0% 15%)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'hsl(0 0% 10%)' : 'hsl(0 0% 10% / 0.5)'}
+                    >
+                      <td className="py-3 px-4 font-semibold" style={{ color: 'hsl(0 0% 98%)' }}>{product.name}</td>
+                      <td className="py-3 px-4">
+                        <span 
+                          className="text-xs px-2 py-1 rounded-full capitalize"
+                          style={{ backgroundColor: 'hsl(0 0% 20%)', color: 'hsl(0 0% 54%)' }}
+                        >
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-semibold" style={{ color: 'hsl(45 93% 47%)' }}>{formatKES(product.price)}</td>
+                      <td className="py-3 px-4">
+                        <span 
+                          className="font-semibold"
+                          style={{ 
+                            color: product.quantity < 5 ? 'hsl(0 84% 60%)' : 
+                                   product.quantity <= 10 ? 'hsl(38 92% 50%)' : 
+                                   'hsl(142 71% 45%)'
+                          }}
+                        >
+                          {product.quantity}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        {product.quantity > 10 ? (
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'hsl(142 71% 45% / 0.2)', color: 'hsl(142 71% 45%)' }}>Available</span>
+                        ) : product.quantity >= 5 ? (
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'hsl(38 92% 50% / 0.2)', color: 'hsl(38 92% 50%)' }}>Low Stock</span>
+                        ) : product.quantity > 0 ? (
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'hsl(0 84% 60% / 0.2)', color: 'hsl(0 84% 60%)' }}>Critical</span>
+                        ) : (
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'hsl(0 84% 60% / 0.2)', color: 'hsl(0 84% 60%)' }}>Out of Stock</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button 
+                            onClick={() => openEditModal(product)}
+                            className="p-2 rounded-lg transition inline-flex items-center justify-center"
+                            style={{ backgroundColor: 'transparent', border: '1px solid hsl(45 93% 47% / 0.3)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(45 93% 47% / 0.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="Edit Product"
+                          >
+                            <Edit className="h-4 w-4" style={{ color: 'hsl(45 93% 47%)' }} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProduct(product._id, product.name)}
+                            className="p-2 rounded-lg transition inline-flex items-center justify-center"
+                            style={{ backgroundColor: 'transparent', border: '1px solid hsl(0 84% 60% / 0.3)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 84% 60% / 0.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="Delete Product"
+                          >
+                            <Trash2 className="h-4 w-4" style={{ color: 'hsl(0 84% 60%)' }} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+            </table>
+          </div> {/* End overflow-x-auto */}
+        </div>
+          )}
         </div>
 
         {/* My Sales Today */}
