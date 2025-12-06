@@ -790,6 +790,145 @@ const ManagerDashboard = () => {
           </div>
         </div>
       )}
+       {/* Add Product Modal */}
+       {addProductModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}>
+          <div className="max-w-md w-full rounded-lg" style={{ backgroundColor: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 17%)' }}>
+            <div className="flex justify-between items-center p-6" style={{ borderBottom: '1px solid hsl(0 0% 17%)' }}>
+              <h2 className="text-xl font-bold" style={{ color: 'hsl(0 0% 98%)' }}>Add New Product</h2>
+              <button 
+                onClick={() => { 
+                  setAddProductModalOpen(false); 
+                  setProductForm({ name: '', category: '', price: '', costPrice: '', quantity: '', description: '' }); 
+                }} 
+                className="text-3xl leading-none hover:opacity-70 transition" 
+                style={{ color: 'hsl(0 0% 54%)' }}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleAddProduct} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'hsl(0 0% 70%)' }}>Product Name *</label>
+                <input 
+                  type="text" 
+                  value={productForm.name} 
+                  onChange={(e) => setProductForm({...productForm, name: e.target.value})} 
+                  className="w-full px-4 py-2 rounded-lg text-sm" 
+                  style={{ backgroundColor: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)', outline: 'none' }} 
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'hsl(0 0% 70%)' }}>Category *</label>
+                <select 
+                  value={productForm.category} 
+                  onChange={(e) => setProductForm({...productForm, category: e.target.value})} 
+                  className="w-full px-4 py-2 rounded-lg text-sm" 
+                  style={{ backgroundColor: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)', outline: 'none' }} 
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="vodka">Vodka</option>
+                  <option value="whiskey">Whiskey</option>
+                  <option value="rum">Rum</option>
+                  <option value="gin">Gin</option>
+                  <option value="beer">Beer</option>
+                  <option value="cider">Cider</option>
+                  <option value="wine">Wine</option>
+                  <option value="spirits">Spirits</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'hsl(0 0% 70%)' }}>Selling Price *</label>
+                  <input 
+                    type="number" 
+                    value={productForm.price} 
+                    onChange={(e) => setProductForm({...productForm, price: e.target.value})} 
+                    className="w-full px-4 py-2 rounded-lg text-sm" 
+                    style={{ backgroundColor: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)', outline: 'none' }} 
+                    placeholder="KES" 
+                    min="0"
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'hsl(0 0% 70%)' }}>Cost Price *</label>
+                  <input 
+                    type="number" 
+                    value={productForm.costPrice} 
+                    onChange={(e) => setProductForm({...productForm, costPrice: e.target.value})} 
+                    className="w-full px-4 py-2 rounded-lg text-sm" 
+                    style={{ backgroundColor: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)', outline: 'none' }} 
+                    placeholder="KES" 
+                    min="0"
+                    required 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'hsl(0 0% 70%)' }}>Initial Quantity *</label>
+                <input 
+                  type="number" 
+                  value={productForm.quantity} 
+                  onChange={(e) => setProductForm({...productForm, quantity: e.target.value})} 
+                  className="w-full px-4 py-2 rounded-lg text-sm" 
+                  style={{ backgroundColor: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)', outline: 'none' }} 
+                  placeholder="Units" 
+                  min="0"
+                  required 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'hsl(0 0% 70%)' }}>Description</label>
+                <textarea 
+                  value={productForm.description} 
+                  onChange={(e) => setProductForm({...productForm, description: e.target.value})} 
+                  className="w-full px-4 py-2 rounded-lg text-sm" 
+                  style={{ backgroundColor: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)', outline: 'none' }} 
+                  rows="3"
+                  placeholder="Optional product description..."
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => { 
+                    setAddProductModalOpen(false); 
+                    setProductForm({ name: '', category: '', price: '', costPrice: '', quantity: '', description: '' }); 
+                  }}
+                  className="flex-1 px-4 py-2 rounded-lg font-semibold transition"
+                  style={{ backgroundColor: 'transparent', border: '1px solid hsl(0 0% 17%)', color: 'hsl(0 0% 98%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 0% 15%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                  style={{ backgroundColor: 'hsl(45 93% 47%)', color: 'hsl(0 0% 0%)', opacity: submitting ? 0.7 : 1 }}
+                  onMouseEnter={(e) => !submitting && (e.currentTarget.style.backgroundColor = 'hsl(45 93% 42%)')}
+                  onMouseLeave={(e) => !submitting && (e.currentTarget.style.backgroundColor = 'hsl(45 93% 47%)')}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Product'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 {/* Edit Product Modal */}
 {editProductModalOpen && selectedProduct && (
   <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
