@@ -790,6 +790,134 @@ const ManagerDashboard = () => {
           </div>
         </div>
       )}
+{/* Edit Product Modal */}
+{editProductModalOpen && selectedProduct && (
+  <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+    <div className="bg-[#1a1a1a] rounded-lg max-w-md w-full border border-gray-800">
+      <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-800">
+        <h2 className="text-lg sm:text-xl font-bold">Edit Product</h2>
+        <button 
+          onClick={() => { 
+            setEditProductModalOpen(false); 
+            setSelectedProduct(null);
+            setProductForm({ name: '', category: '', price: '', costPrice: '', quantity: '', description: '' }); 
+          }} 
+          className="text-gray-400 hover:text-white"
+        >
+          <X className="h-6 w-6" />
+        </button>
+      </div>
+      <form onSubmit={handleEditProduct} className="p-4 sm:p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Product Name *</label>
+          <input 
+            type="text" 
+            value={productForm.name} 
+            onChange={(e) => setProductForm({...productForm, name: e.target.value})} 
+            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" 
+            required 
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Category *</label>
+          <select 
+            value={productForm.category} 
+            onChange={(e) => setProductForm({...productForm, category: e.target.value})} 
+            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" 
+            required
+          >
+            <option value="">Select Category</option>
+            <option value="vodka">Vodka</option>
+            <option value="whiskey">Whiskey</option>
+            <option value="rum">Rum</option>
+            <option value="gin">Gin</option>
+            <option value="beer">Beer</option>
+            <option value="cider">Cider</option>
+            <option value="wine">Wine</option>
+            <option value="spirits">Spirits</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Selling Price *</label>
+            <input 
+              type="number" 
+              value={productForm.price} 
+              onChange={(e) => setProductForm({...productForm, price: e.target.value})} 
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" 
+              placeholder="KES" 
+              min="0"
+              required 
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Cost Price *</label>
+            <input 
+              type="number" 
+              value={productForm.costPrice} 
+              onChange={(e) => setProductForm({...productForm, costPrice: e.target.value})} 
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" 
+              placeholder="KES" 
+              min="0"
+              required 
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Quantity *</label>
+          <input 
+            type="number" 
+            value={productForm.quantity} 
+            onChange={(e) => setProductForm({...productForm, quantity: e.target.value})} 
+            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" 
+            placeholder="Units" 
+            min="0"
+            required 
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
+          <textarea 
+            value={productForm.description} 
+            onChange={(e) => setProductForm({...productForm, description: e.target.value})} 
+            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#D4AF37]" 
+            rows="3"
+            placeholder="Optional product description..."
+          />
+        </div>
+        <div className="flex gap-3 pt-4">
+          <button 
+            type="button"
+            onClick={() => { 
+              setEditProductModalOpen(false); 
+              setSelectedProduct(null);
+              setProductForm({ name: '', category: '', price: '', costPrice: '', quantity: '', description: '' }); 
+            }}
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition text-sm"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            disabled={submitting}
+            className="flex-1 bg-[#D4AF37] hover:bg-[#c9a532] text-black font-semibold py-3 rounded-lg transition text-sm flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              'Update Product'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
